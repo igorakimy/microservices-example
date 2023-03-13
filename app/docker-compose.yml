@@ -1,0 +1,46 @@
+version: "3"
+
+services:
+
+  # broker service
+  broker:
+    build:
+      context: "./../broker"
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8080:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  # authenticate service
+  auth:
+    build:
+      context: "./../auth"
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8081:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - "./.env"
+
+  # postgresql service
+  postgres:
+    image: "postgres:14.0"
+    ports:
+      - "54321:5432"
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - "./.env"
+    volumes:
+      - pg_data/:/var/lib/postgresql/data
+
+volumes:
+  pg_data:
