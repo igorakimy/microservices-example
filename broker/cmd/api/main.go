@@ -22,5 +22,8 @@ func main() {
 
 	fmt.Printf("Starting broker on port: %s\n", PORT)
 
-	log.Panic(srv.ListenAndServe())
+	if err := srv.ListenAndServe(); err != nil {
+		log.Printf("Serving error: %v\n", err)
+		panic(err)
+	}
 }
