@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -37,12 +39,57 @@ func (s *Service) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// log authentication
+	if err := s.logRequest(
+		"authentication",
+		fmt.Sprintf("%s logged in", user.Email),
+	); err != nil {
+		log.Printf("Error on log request: %v\n", err)
+		_ = s.errorJSON(w, err)
+		return
+	}
+
 	resPayload := jsonResponse{
 		Message: fmt.Sprintf("Logged in user %s", user.Email),
 		Data:    user,
 	}
-	if err := s.writeJSON(w, http.StatusAccepted, &resPayload); err != nil {
+	if err := s.writeJSON(w, http.StatusAccepted, resPayload); err != nil {
 		log.Fatal(err)
 		return
 	}
+}
+
+func (s *Service) logRequest(name, data string) error {
+	var entry struct {
+		Name string `json:"name"`
+		Data string `json:"data"`
+	}
+
+	entry.Name = name
+	entry.Data = data
+
+	jsonData, err := json.MarshalIndent(entry, "", "\t")
+	if err != nil {
+		return err
+	}
+	logServiceURL := "http://logger/log"
+
+	request, err := http.NewRequest(
+		http.MethodPost,
+		logServiceURL,
+		bytes.NewBuffer(jsonData),
+	)
+	if err != nil {
+		log.Printf("Error on make logger request: %v\n", err)
+		return err
+	}
+
+	client := &http.Client{}
+	_, err = client.Do(request)
+	if err != nil {
+		log.Printf("Error on logger request: %v\n", err)
+		return err
+	}
+
+	return nil
 }
