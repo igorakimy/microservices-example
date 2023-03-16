@@ -10,6 +10,7 @@
                 <a id="brokerBtn" class="btn btn-outline-secondary" href="javascript:void(0)">Test Broker</a>
                 <a id="authBrokerBtn" class="btn btn-outline-secondary" href="javascript:void(0)">Test Auth</a>
                 <a id="logBtn" class="btn btn-outline-secondary" href="javascript:void(0)">Test Logger</a>
+                <a id="mailBtn" class="btn btn-outline-secondary" href="javascript:void(0)">Test Mail</a>
 
 
                 <div id="output" class="mt-5" style="outline: 1px solid silver; padding: 2em;">
@@ -39,6 +40,7 @@
         let brokerBtn = document.getElementById("brokerBtn")
         let authBrokerBtn = document.getElementById("authBrokerBtn")
         let logBtn = document.getElementById("logBtn")
+        let mailBtn = document.getElementById("mailBtn")
         let output = document.getElementById("output")
         let sent = document.getElementById("payload")
         let received = document.getElementById("received")
@@ -125,6 +127,42 @@
                         output.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
                     } else {
                         output.innerHTML += `<br><strong>Received from auth service:</strong> ${data.message}`
+                    }
+                })
+                .catch((error) => {
+                    output.innerHTML = "<br>Error: " + error.toString()
+                })
+        })
+
+        mailBtn.addEventListener("click", () => {
+            const payload = {
+                action: "mail",
+                mail: {
+                    "from": "admin@gmail.com",
+                    "to": "igorakimy@gmail.com",
+                    "subject": "Some subject",
+                    "message": "Hello my friend!"
+                }
+            }
+
+            const headers = new Headers()
+            headers.append("Content-Type", "application/json")
+
+            const body = {
+                method: "POST",
+                body: JSON.stringify(payload),
+                headers: headers
+            }
+
+            fetch("http:\/\/localhost:8080/handle", body)
+                .then((response) => response.json())
+                .then((data) => {
+                    sent.innerHTML = JSON.stringify(payload, undefined, 4)
+                    received.innerHTML = JSON.stringify(data, undefined, 4)
+                    if (data.error) {
+                        output.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
+                    } else {
+                        output.innerHTML += `<br><strong>Received from mail service:</strong> ${data.message}`
                     }
                 })
                 .catch((error) => {
