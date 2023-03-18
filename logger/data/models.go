@@ -31,6 +31,14 @@ func New(mongoClient *mongo.Client) Models {
 	}
 }
 
+func GetMongoDBName() string {
+	return mongoDbName
+}
+
+func GetCollectionName() string {
+	return logsCollectionName
+}
+
 type LogEntry struct {
 	ID        string    `bson:"_id,omitempty" json:"id,omitempty"`
 	Name      string    `bson:"name" json:"name"`

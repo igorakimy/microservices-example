@@ -11,6 +11,7 @@ services:
     ports:
       - "8080:80"
     env_file:
+      - "./.env"
       - "./../listener/.env"
     deploy:
       mode: replicated
@@ -40,7 +41,7 @@ services:
       mode: replicated
       replicas: 1
     env_file:
-      - "./.env"
+      - "./../auth/.env"
 
   # listener service
   listener:
@@ -79,7 +80,7 @@ services:
     env_file:
       - "./.env"
     volumes:
-      - pg_data/:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
 
   # mongo
   mongo:
@@ -90,7 +91,7 @@ services:
       - "./../logger/.env"
       - "./../logger/mongo.env"
     volumes:
-      - mongo_data/:/data/db
+      - mongo_data:/data/db
       - ./init-mongo.sh:/docker-entrypoint-initdb.d/init-mongo.sh
 
   # mailhog
@@ -109,7 +110,7 @@ services:
       mode: replicated
       replicas: 1
     volumes:
-      - rabbitmq_data/:/var/lib/rabbitmq/
+      - rabbitmq_data:/var/lib/rabbitmq/
 
 volumes:
   pg_data:

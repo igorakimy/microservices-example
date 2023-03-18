@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/rpc"
+	"os"
 
 	"broker/event"
 )
@@ -63,7 +65,7 @@ func (s *Service) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	case "auth":
 		s.authenticate(w, reqPayload.Auth)
 	case "log":
-		s.logEventViaRabbit(w, reqPayload.Log)
+		s.logItemViaRPC(w, reqPayload.Log)
 	case "mail":
 		s.sendMail(w, reqPayload.Mail)
 	default:
@@ -232,4 +234,38 @@ func (s *Service) pushToQueue(name, msg string) error {
 	}
 
 	return nil
+}
+
+type RPCPayload struct {
+	Name string
+	Data string
+}
+
+func (s *Service) logItemViaRPC(w http.ResponseWriter, lp LogPayload) {
+	client, err := rpc.Dial(
+		"tcp",
+		fmt.Sprintf("logger:%s", os.Getenv("RPC_PORT")),
+	)
+	if err != nil {
+		_ = s.errorJSON(w, err)
+		return
+	}
+
+	rpcPayload := &RPCPayload{
+		Name: lp.Name,
+		Data: lp.Data,
+	}
+
+	var result string
+	err = client.Call("RPCServer.LogInfo", rpcPayload, &result)
+	if err != nil {
+		_ = s.errorJSON(w, err)
+		return
+	}
+
+	payload := jsonResponse{
+		Message: result,
+	}
+
+	_ = s.writeJSON(w, http.StatusAccepted, payload)
 }
