@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"broker/event"
 )
 
 const (
@@ -61,7 +63,7 @@ func (s *Service) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	case "auth":
 		s.authenticate(w, reqPayload.Auth)
 	case "log":
-		s.logItem(w, reqPayload.Log)
+		s.logEventViaRabbit(w, reqPayload.Log)
 	case "mail":
 		s.sendMail(w, reqPayload.Mail)
 	default:
@@ -200,4 +202,34 @@ func (s *Service) sendMail(w http.ResponseWriter, mp MailPayload) {
 	_ = s.writeJSON(w, http.StatusAccepted, jsonResponse{
 		Message: fmt.Sprintf("Message sent to %s", mp.To),
 	})
+}
+
+func (s *Service) logEventViaRabbit(w http.ResponseWriter, lp LogPayload) {
+	if err := s.pushToQueue(lp.Name, lp.Data); err != nil {
+		_ = s.errorJSON(w, err)
+		return
+	}
+
+	_ = s.writeJSON(w, http.StatusAccepted, jsonResponse{
+		Message: "logged via RabbitMQ",
+	})
+}
+
+func (s *Service) pushToQueue(name, msg string) error {
+	emitter, err := event.NewEventEmitter(s.Rabbit)
+	if err != nil {
+		return err
+	}
+
+	payload := LogPayload{
+		Name: name,
+		Data: msg,
+	}
+
+	j, _ := json.MarshalIndent(&payload, "", "\t")
+	if err := emitter.Push(string(j), "log.INFO"); err != nil {
+		return err
+	}
+
+	return nil
 }

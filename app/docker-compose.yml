@@ -10,6 +10,8 @@ services:
     restart: always
     ports:
       - "8080:80"
+    env_file:
+      - "./../listener/.env"
     deploy:
       mode: replicated
       replicas: 1
@@ -39,6 +41,19 @@ services:
       replicas: 1
     env_file:
       - "./.env"
+
+  # listener service
+  listener:
+    build:
+      context: "./../listener"
+      dockerfile: Dockerfile
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - "./../listener/.env"
+
 
   # mail service
   mail:
@@ -85,6 +100,18 @@ services:
       - "1025:1025"
       - "8025:8025"
 
+  # rabbitmq
+  rabbitmq:
+    image: "rabbitmq:3.9.29-alpine"
+    ports:
+      - "5672:5672"
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+      - rabbitmq_data/:/var/lib/rabbitmq/
+
 volumes:
   pg_data:
   mongo_data:
+  rabbitmq_data:
