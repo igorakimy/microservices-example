@@ -2,15 +2,21 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"logger/logs"
 	"net/http"
 	"net/rpc"
 	"os"
+	"time"
 
 	"broker/event"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -268,4 +274,43 @@ func (s *Service) logItemViaRPC(w http.ResponseWriter, lp LogPayload) {
 	}
 
 	_ = s.writeJSON(w, http.StatusAccepted, payload)
+}
+
+// LogViaGRPC handles GRPC requests.
+func (s *Service) LogViaGRPC(w http.ResponseWriter, r *http.Request) {
+	var reqPayload RequestPayload
+
+	if err := s.readJSON(w, r, &reqPayload); err != nil {
+		_ = s.errorJSON(w, err)
+		return
+	}
+
+	conn, err := grpc.Dial(
+		fmt.Sprintf("logger:%s", os.Getenv("GRPC_PORT")),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+	)
+	if err != nil {
+		_ = s.errorJSON(w, err)
+		return
+	}
+	defer conn.Close()
+
+	client := logs.NewLogServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	if _, err = client.WriteLog(ctx, &logs.LogRequest{
+		LogEntry: &logs.Log{
+			Name: reqPayload.Log.Name,
+			Data: reqPayload.Log.Data,
+		},
+	}); err != nil {
+		_ = s.errorJSON(w, err)
+		return
+	}
+
+	_ = s.writeJSON(w, http.StatusAccepted, jsonResponse{
+		Message: "logged",
+	})
 }

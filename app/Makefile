@@ -6,6 +6,9 @@ LOGGER_BINARY=loggerApp
 MAIL_BINARY=mailerApp
 LISTENER_BINARY=listenerApp
 
+BROKER_PROTO_PATH=./../broker/logs
+LOGGER_PROTO_PATH=./../logger/logs
+
 ## up: starts all containers in the background without forcing build
 up:
 	@echo Starting Docker images...
@@ -77,4 +80,20 @@ start:
 stop:
 	@echo Stopping frontend...
 	taskkill /im ${FRONTEND_BINARY} /f
+	@echo Done!
+
+## logger_protobuf: generates go files for logger protocol buffers
+logger_protobuf:
+	@echo Generating logger protobuf go files...
+	protoc --proto_path=${LOGGER_PROTO_PATH} --go_out=${LOGGER_PROTO_PATH} \
+		--go_opt=paths=source_relative --go-grpc_out=${LOGGER_PROTO_PATH} \
+		--go-grpc_opt=paths=source_relative logs.proto
+	@echo Done!
+
+## broker_protobuf: generates go files for broker protocol buffers
+broker_protobuf:
+	@echo Generating broker protobuf go files...
+	protoc --proto_path=${BROKER_PROTO_PATH} --go_out=${BROKER_PROTO_PATH} \
+		--go_opt=paths=source_relative --go-grpc_out=${BROKER_PROTO_PATH} \
+		--go-grpc_opt=paths=source_relative logs.proto
 	@echo Done!

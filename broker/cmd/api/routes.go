@@ -27,6 +27,7 @@ func (s *Service) router() http.Handler {
 	// Set other endpoints.
 	mux.Post("/", s.Broker)
 	mux.Post("/handle", s.HandleSubmission)
+	mux.Post("/log-grpc", s.LogViaGRPC)
 
 	return mux
 }
