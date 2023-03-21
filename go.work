@@ -1,8 +1,10 @@
 go 1.19
 
-use ./frontend
-use ./broker
-use ./auth
-use ./logger
-use ./mail
-use ./listener
+use (
+	./frontend
+	./broker
+	./auth
+	./logger
+	./mail
+	./listener
+)
