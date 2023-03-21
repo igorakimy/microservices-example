@@ -1,0 +1,116 @@
+version: "3"
+
+services:
+
+  caddy:
+    image: igorakimov/caddy:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+  frontend:
+    image: igorakimov/frontend-service:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - "./../frontend/.env"
+
+  broker:
+    image: igorakimov/broker-service:1.0.1
+    ports:
+      - "8080:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - "./.env"
+      - "./../broker/.env"
+      - "./../listener/.env"
+
+  listener:
+    image: igorakimov/listener-service:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - "./../listener/.env"
+  
+  auth:
+    image: igorakimov/auth-service:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - "./../auth/.env"
+      - "./../listener/.env"
+
+  logger:
+    image: igorakimov/logger-service:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - "./.env"
+      - "./../logger/.env"
+
+  mail:
+    image: igorakimov/mail-service:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - "./../mail/.env"
+
+  rabbitmq:
+    image: "rabbitmq:3.9.29-alpine"
+    deploy:
+      mode: global
+
+  mailhog:
+    image: "mailhog/mailhog:latest"
+    ports:
+      - "8025:8025"
+    deploy:
+      mode: global
+
+  mongo:
+    image: "mongo:4.2.16-bionic"
+    ports:
+      - "27017:27017"
+    deploy:
+      mode: global
+    env_file:
+      - "./../logger/.env"
+      - "./../logger/mongo.env"
+    volumes:
+      - mongo_data:/data/db
+      - ./init-mongo.sh:/docker-entrypoint-initdb.d/init-mongo.sh
+
+  postgres:
+    image: "postgres:14.2"
+    ports:
+      - "54321:5432"
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - "./.env"
+      - "./../auth/.env"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./users.sql:/sql/users.sql
+      - ./init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh
+
+volumes:
+  pg_data:
+  mongo_data:
+  caddy_config:
+  caddy_data:
+    external: true
