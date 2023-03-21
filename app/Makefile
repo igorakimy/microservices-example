@@ -100,6 +100,18 @@ stop:
 	taskkill /im ${FRONTEND_BINARY} /f
 	@echo Done!
 
+## env: creates env files from copies
+env:
+	@echo Creating new .env files...
+	cp .env.example .env \
+		&& cp ./../auth/.env.example ./../auth/.env \
+		&& cp ./../broker/.env.example ./../broker/.env \
+		&& cp ./../frontend/.env.example ./../frontend/.env \
+		&& cp ./../listener/.env.example ./../listener/.env \
+		&& cp ./../logger/.env.example ./../logger/.env \
+		&& cp ./../mail/.env.example ./../mail/.env
+	@echo Done!
+
 ## logger_protobuf: generates go files for logger protocol buffers
 logger_protobuf:
 	@echo Generating logger protobuf go files...
