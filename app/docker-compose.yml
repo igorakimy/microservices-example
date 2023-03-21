@@ -12,6 +12,7 @@ services:
       - "8080:80"
     env_file:
       - "./.env"
+      - "./../broker/.env"
       - "./../listener/.env"
     deploy:
       mode: replicated
@@ -24,6 +25,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     env_file:
+      - "./.env"
       - "./../logger/.env"
     deploy:
       mode: replicated
@@ -68,6 +70,17 @@ services:
     env_file:
       - "./../mail/.env"
 
+  frontend:
+    build:
+      context: "./../frontend"
+      dockerfile: Dockerfile
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - "./../frontend/.env"
+
   # postgresql
   postgres:
     image: "postgres:14.0"
@@ -81,6 +94,8 @@ services:
       - "./.env"
     volumes:
       - pg_data:/var/lib/postgresql/data
+      - ./users.sql:/sql/users.sql
+      - ./init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh
 
   # mongo
   mongo:
