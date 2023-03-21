@@ -1,5 +1,6 @@
 SHELL=cmd.exe
 FRONTEND_BINARY=frontendApp.exe
+FRONTEND_BINARY_LINUX=frontendApp
 BROKER_BINARY=brokerApp
 AUTH_BINARY=authApp
 LOGGER_BINARY=loggerApp
@@ -8,6 +9,16 @@ LISTENER_BINARY=listenerApp
 
 BROKER_PROTO_PATH=./../broker/logs
 LOGGER_PROTO_PATH=./../logger/logs
+
+DOCKER_USERNAME=igorakimov
+
+BROKER_VERSION=1.0.1
+AUTH_VERSION=1.0.0
+LOGGER_VERSION=1.0.0
+LISTENER_VERSION=1.0.0
+MAILER_VERSION=1.0.0
+FRONTEND_VERSION=1.0.0
+CADDY_VERSION=1.0.0
 
 ## up: starts all containers in the background without forcing build
 up:
@@ -71,6 +82,13 @@ build_frontend:
 		&& go build -o ${FRONTEND_BINARY} ../frontend/cmd/web
 	@echo Done!
 
+## build_frontend_linux: builds the frontend binary for Linux system
+build_frontend_linux:
+	@echo Building frontend binary...
+	chdir ../frontend && set GOOS=linux&& set GOARCH=amd64&& set CGO_ENABLED=0\
+		&& go build -o ${FRONTEND_BINARY_LINUX} ../frontend/cmd/web
+	@echo Done!
+
 ## start: starts the frontend
 start:
 	@echo Starting frontend...
@@ -96,4 +114,58 @@ broker_protobuf:
 	protoc --proto_path=${BROKER_PROTO_PATH} --go_out=${BROKER_PROTO_PATH} \
 		--go_opt=paths=source_relative --go-grpc_out=${BROKER_PROTO_PATH} \
 		--go-grpc_opt=paths=source_relative logs.proto
+	@echo Done!
+
+## docker_build_broker: builds docker image for broker service
+docker_build_broker:
+	@echo Building docker image for broker service...
+	docker build -f ./../broker/Dockerfile -t ${DOCKER_USERNAME}/broker-service:${BROKER_VERSION} ./../broker
+	@echo Done!
+
+## docker_build_logger: builds docker image for logger service
+docker_build_logger:
+	@echo Building docker image for logger service...
+	docker build -f ./../logger/Dockerfile -t ${DOCKER_USERNAME}/logger-service:${LOGGER_VERSION} ./../logger
+	@echo Done!
+
+## docker_build_auth: builds docker image for auth service
+docker_build_auth:
+	@echo Building docker image for auth service...
+	docker build -f ./../auth/Dockerfile -t ${DOCKER_USERNAME}/auth-service:${AUTH_VERSION} ./../auth
+	@echo Done!
+
+## docker_build_mail: builds docker image for mail service
+docker_build_mail:
+	@echo Building docker image for mail service...
+	docker build -f ./../mail/Dockerfile -t ${DOCKER_USERNAME}/mail-service:${MAIL_VERSION} ./../mail
+	@echo Done!
+
+## docker_build_listener: builds docker image for listener service
+docker_build_listener:
+	@echo Building docker image for listener service...
+	docker build -f ./../listener/Dockerfile -t ${DOCKER_USERNAME}/listener-service:${LISTENER_VERSION} ./../listener
+	@echo Done!
+
+## docker_build_frontend: builds docker image for frontend service
+docker_build_frontend:
+	@echo Building docker image for frontend service...
+	docker build -f ./../frontend/Dockerfile -t ${DOCKER_USERNAME}/frontend-service:${FRONTEND_VERSION} ./../frontend
+	@echo Done!
+
+## docker_build_caddy: builds docker image for caddy service
+docker_build_caddy:
+	@echo Building docker image for caddy service...
+	docker build -f caddy.Dockerfile -t ${DOCKER_USERNAME}/caddy:${CADDY_VERSION} .
+	@echo Done!
+
+## up_stack: up docker stack
+up_stack:
+	@echo Deploing docker stack
+	docker stack deploy -c swarm.yml micro
+	@echo Done!
+
+## down_stack: down docker stack
+down_stack:
+	@echo Removing docker stack
+	docker stack rm micro
 	@echo Done!
