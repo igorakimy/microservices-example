@@ -58,7 +58,7 @@ VALUES
     E'admin@example.com',
     E'Admin',
     E'User',
-    E'$2y$10$7Ot4PpJFfbWqjMu78VwrLuhAo.eAXGRe7.RUB8m2sMkwpeV/kc1BK',
+    E'$2a$12$txp8To/XkvyEfdM4WLA3Ze/wM5rOH9SPQGgmfsH9kDQ2ZqWDKaWCa',
     E'TRUE',
     E'2023-03-10 00:00:00',
     E'2023-03-10 00:00:00'
