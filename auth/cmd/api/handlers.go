@@ -19,6 +19,7 @@ func (s *Service) Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	err := s.readJSON(w, r, &reqPayload)
 	if err != nil {
+		log.Println(err)
 		_ = s.errorJSON(w, err, http.StatusBadRequest)
 		return
 	}
@@ -54,7 +55,8 @@ func (s *Service) Authenticate(w http.ResponseWriter, r *http.Request) {
 		Data:    user,
 	}
 	if err := s.writeJSON(w, http.StatusAccepted, resPayload); err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		_ = s.errorJSON(w, err)
 		return
 	}
 }
