@@ -11,8 +11,8 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-const (
-	PORT = "80"
+var (
+	webPort = os.Getenv("BROKER_SERVICE_PORT")
 )
 
 type Service struct {
@@ -33,11 +33,11 @@ func main() {
 	}
 
 	srv := http.Server{
-		Addr:    fmt.Sprintf(":%s", PORT),
+		Addr:    fmt.Sprintf(":%s", webPort),
 		Handler: service.router(),
 	}
 
-	fmt.Printf("Starting broker on port: %s\n", PORT)
+	fmt.Printf("Starting broker on port: %s\n", webPort)
 
 	if err := srv.ListenAndServe(); err != nil {
 		log.Printf("Serving error: %v\n", err)

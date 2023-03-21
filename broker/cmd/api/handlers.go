@@ -6,14 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
-	"logger/logs"
 	"net/http"
 	"net/rpc"
 	"os"
 	"time"
 
 	"broker/event"
+	"logger/logs"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -150,6 +151,8 @@ func (s *Service) authenticate(w http.ResponseWriter, ap AuthPayload) {
 		_ = s.errorJSON(w, errors.New("invalid credentials"))
 		return
 	} else if resp.StatusCode != http.StatusAccepted {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		log.Printf("%v", string(bodyBytes))
 		_ = s.errorJSON(w, errors.New("error calling auth service"))
 		return
 	}
